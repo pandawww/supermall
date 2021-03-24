@@ -5,13 +5,16 @@
         <div>购物街</div>
       </template>
     </nav-bar>
+    <tab-control class="top-tab-contrl fixed" :titles="['流行','新款','精选']" @tabClick="tabClick"
+       ref="tabControl1" v-show="isFixed"></tab-control>
     <scroll class="content" ref="scroll" 
     :probe-type="3" @scroll="contentScroll" 
     :pull-up-load="true" @pullingUp="loadMore">
-      <home-swiper :banners="banners"></home-swiper>
+      <home-swiper :banners="banners" @swiperImageLoad="swiperImageLoad"></home-swiper>
       <recommend-view :recommends="recommend"></recommend-view>
       <feature-view></feature-view>
-      <tab-control class="tab-control" :titles="['流行','新款','精选']" @tabClick="tabClick"></tab-control>
+      <tab-control class="" :titles="['流行','新款','精选']" @tabClick="tabClick"
+       ref="tabControl2"></tab-control>
       <goods-list :goods="showGoods"></goods-list>
     </scroll>
     <back-top @click="backTop" v-show="isShowBackTop"></back-top>
@@ -50,7 +53,10 @@ export default {
         sell: { page: 0, list: [] }
       },
       currentType: "pop",
-      isShowBackTop:false
+      isShowBackTop:false,
+      tabOffsetTop:0,
+      isFixed:false,
+      saveY:0
     };
   },
   computed: {
@@ -68,38 +74,55 @@ export default {
     //   this.$refs.scroll.refresh()
     // })
   },
+  activated(){
+    this.$refs.scroll.scrollTo(0,saveY,0)
+    console.log("activated")
+  },
+  deactivated(){
+    this.saveY=this.$refs.scroll.scroll.y
+    console.log("deactivated")
+  },
   methods: {
     tabClick(index) {
-      if (index == 0) {
-        this.currentType = "pop";
-      } else if (index == 1) {
-        this.currentType = "new";
-      } else {
-        this.currentType = "sell";
-      }
-      // switch (index){
-      //   case 0:
-      //   this.currentType="pop"
-      //   break
-      //   case 1:
-      //   this.currentType="new"
-      //   break
-      //   case 2:
-      //   this.currentType="sell"
-      //   break
+      // if (index == 0) {
+      //   this.currentType = "pop";
+      // } else if (index == 1) {
+      //   this.currentType = "new";
+      // } else {
+      //   this.currentType = "sell";
       // }
-      
+      switch (index){
+        case 0:
+        this.currentType="pop"
+        break
+        case 1:
+        this.currentType="new"
+        break
+        case 2:
+        this.currentType="sell"
+        break
+      }
+      this.$refs.tabControl1.$el.currentIndex=index
+      this.$refs.tabControl2.$el.currentIndex=index
+      // console.log(this.$refs.tabControl1.$el.currentIndex)
+      // console.log(this.$refs.tabControl2.$el.currentIndex)
     },
+    
     backTop(){
       console.log("backtop")
         this.$refs.scroll.scrollTo(0,0,500)
       },
     contentScroll(position){
       this.isShowBackTop=(-position.y)>1000
+      this.isFixed=(-position.y)>this.tabOffsetTop
     },
     loadMore(){
       // console.log("加载更多")
       this.getHomeGoods(this.currentType)
+    },
+    swiperImageLoad(){
+      this.tabOffsetTop=this.$refs.tabControl2.$el.offsetTop
+      // console.log(this.tabOffsetTop)
     },
 
     // 网络请求相关的方法
@@ -127,27 +150,32 @@ export default {
 </script>
 <style scoped>
 #home {
-  padding-top: 44px;
+  /*padding-top: 44px;*/
   margin-bottom: 49px;
 }
 .nav-bar {
+  /*
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 6;
+  z-index: 99;
+  */
   background: rgb(247, 150, 166);
   font-size: 16px;
   color: #ffffff;
   box-shadow: 0, 1px, 1px, rgba(100, 100, 100, 0.1);
 }
-.tab-control {
-  position: sticky;
-  top: 44px;
-  z-index: 99;
-}
+.fixed {
+    position: fixed;
+    top: 43px;
+    left: 0;
+    right: 0;
+    z-index: 99;
+  }
 .content{
   height: calc(100vh - 93px);
   overflow: hidden;
+  position: absolute;
 }
 </style>
